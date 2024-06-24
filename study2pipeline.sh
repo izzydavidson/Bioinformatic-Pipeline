@@ -1,6 +1,29 @@
 #!/bin/bash
 ###########################################################################################################################################################################################################
-#BASECALLER?####
+
+### Fast5 files require converting to a PDO5 file prior to basecalling
+
+pod5 convert fast5 '/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run3/RUN 3' -o '/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run3/rawrun3'
+
+# If error message occurs about no mutli-read format, convert single-read files to multi-read files via:
+
+single_to_multi_fast5 -i /mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run3/'RUN 3' -s /mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run3/rawrun3/
+
+#Dorado Basecaller
+
+# dorado basecaller --device cpu dna_r10.4.1_e8.2_260bps_hac@v4.0.0/ /mnt/data/Study2pipeline/nextflow/dorado_dir/PDO5_files/ > newcalls.bam
+
+#Dorado Duplex Run:
+
+dorado duplex --device cpu dna_r10.4.1_e8.2_260bps_hac@v4.0.0/ /mnt/data/Study2pipeline/nextflow/dorado_dir/PDO5_files/ > duplexcalls.bam
+
+# Check the files
+
+samtools quickcheck /mnt/data/Study2pipeline/nextflow/dorado_run/newcalls.bam
+
+# Converting .bam to .fastq
+samtools bam2fq newcalls.bam > basecalls.fastq
+
 
 ###  Quality reports and checks-raw data    ###
 #----------------------------------------------#
@@ -22,8 +45,6 @@ echo 'FastQC completed. Reports available in nextflow/data/fastqc_reports'
  /usr/bin/multiqc . /mnt/data/Study2pipeline/nextflow/data/fastqc_reports -o "/mnt/data/Study2pipeline/nextflow/data/multiqc_data"
 
 echo 'MultiQC competed. Report will be available in nextflow/data/multiqc_data'
-
-
 
 
 ###   Adapter Trimming & Demultiplexing - Porechop   ###
