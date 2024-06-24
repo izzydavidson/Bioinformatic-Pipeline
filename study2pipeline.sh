@@ -91,9 +91,9 @@ echo 'MultiQC competed. Report will be available in nextflow/data/processed_mult
 
 ### Loop To Combine all .csv Files for Data Analysis ####
 #-------------------------------------------------------#
-results_dir="/mnt/data/Study2pipeline/nextflow/NanoCLUST/results"
+results_dir="/mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/results/"
 output_dir="$results_dir/compiled_results"
-mkdir -p "$output_dir"
+mkdir -p "$output_dir" || { echo "Error: Unable to create output directory"; exit 1; }
 
 # Iterate over subdirectories
 for subdir in "$results_dir"/*; do
@@ -102,31 +102,32 @@ for subdir in "$results_dir"/*; do
         subdir_name=$(basename "$subdir")  # Get the name of the subdirectory
         output_file="$output_dir/${subdir_name}.csv"  # Define output file name for each subdirectory
 
+        # Check if there are CSV files in the subdirectory
+        csv_files=("$subdir"/*.csv)
+        if [ ${#csv_files[@]} -eq 0 ]; then
+            echo "Warning: No CSV files found in $subdir"
+            continue
+        fi
+
         # Initialize the output file with header
         echo "taxid,rel_abundance" > "$output_file"
 
         # Concatenate all CSV files in the subdirectory into a single file
-        cat "$subdir"/*.csv > "$output_file.tmp"
+        cat "${csv_files[@]}" > "$output_file.tmp" || { echo "Error: Failed to concatenate CSV files"; exit 1; }
 
         # Extract the top 20 most abundant bacteria and append to the output file
-        tail -n +2 "$output_file.tmp" | sort -t',' -k2 -nr | head -n 20 >> "$output_file"
+        tail -n +2 "$output_file.tmp" | sort -t',' -k2 -nr | head -n 20 >> "$output_file" || { echo "Error: Failed to sort and append to output file"; exit 1; }
 
         # Remove temporary file
-        rm "$output_file.tmp"
+        rm "$output_file.tmp" || { echo "Error: Failed to remove temporary file"; exit 1; }
     fi
 done
 
-echo "Top 20 most abundant bacteria files generated in $output_dir" 
-
-# Now clean up 
-
-cd /mnt/data/Study2pipeline/nextflow/NanoCLUST/results/compiled_results
-
-sudo rm compiled_results.csv/  fastqc_rawdata.csv/  pipeline_info.csv/
+echo "Top 20 most abundant bacteria files generated in $output_dir"
 
 
 # Navigate to the directory containing your CSV files
-cd /mnt/data/Study2pipeline/nextflow/NanoCLUST/results/compiled_results
+cd /mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/results/compiled_results
 
 # Loop through each CSV file and remove duplicates
 for file in *.csv; do
@@ -150,18 +151,11 @@ for file in *.csv; do
     mv "$file.sorted" "$file"
 done
 
-
-###Python section###
-/mnt/data/Study2pipeline/nextflow/python3 <<END
-# Python code goes here
-print("This is Python code running from the shell script.")
-
-
 import pandas as pd
 import os
 
 # Get a list of all CSV files in the directory
-directory = '/mnt/data/Study2pipeline/nextflow/NanoCLUST/results/compiled_results'
+directory = '/mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/results/compiled_results'
 csv_files = [file for file in os.listdir(directory) if file.endswith('.csv')]
 
 # Initialize an empty DataFrame to store the result
@@ -194,5 +188,3 @@ result_df.to_csv('result.csv')
 
 print("Files processed successfully:", csv_files)
 
-
-END
