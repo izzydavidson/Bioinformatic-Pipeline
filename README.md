@@ -58,5 +58,8 @@ Once each document has been cleaned, compile all the results into 1 csv file for
 
 
 ## R Studio
+ Heatmap generation - Heatmaps.R
 
+ Stacked bar chart generation - stackedbarchart.R
 
+ Grouped Stacked bar chart generation - groupstackedbar.R
