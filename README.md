@@ -12,6 +12,12 @@ Custom Bioinformatic Pipeline for Taxonomic Identification from Nanopore Sequenc
 - NanoCLUST: [NanoCLUST Repository](https://github.com/genomicsITER/NanoCLUST)
 - Dorado [https://github.com/nanoporetech/dorado]
 
+# To Run this Pipeline, the Pipeline in Shell Format has to be Run First, Followed by the end_compile.py File
+
+bash study2pipeline.sh
+python3 end_compile.py
+
+
 ### Dorado Basecalling
 
 Fast5 files require converting to a PDO5 file prior to basecalling either using a POD5 converter tool or the online converter provided by ONT. Can either use basecaller or duplex and once the run is complete, use samtools to convert .bam to .fastq
