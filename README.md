@@ -16,6 +16,8 @@ Custom Bioinformatic Pipeline for Taxonomic Identification from Nanopore Sequenc
 
 Fast5 files require converting to a PDO5 file prior to basecalling either using a POD5 converter tool or the online converter provided by ONT. Can either use basecaller or duplex and once the run is complete, use samtools to convert .bam to .fastq
 
+Once files are converted, move to the directory with the bin for dorado then run the command
+
 
 ### FastQC and MultiQC for Raw Data Analysis
 Fastq files from dorado are fed directly into fastqc and multiqc tool for raw data analysis before porechop.
@@ -58,5 +60,8 @@ Once each document has been cleaned, compile all the results into 1 csv file for
 
 
 ## R Studio
+ Heatmap generation - Heatmaps.R
 
+ Stacked bar chart generation - stackedbarchart.R
 
+ Grouped Stacked bar chart generation - groupstackedbar.R
