@@ -3,57 +3,69 @@
 
 ### Fast5 files require converting to a PDO5 file prior to basecalling
 
-pod5 convert fast5 '/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run3/RUN 3' -o '/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run3/rawrun3'
+#pod5 convert fast5 '/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run3/RUN 3' -o '/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run3/rawrun3'
 
 # If error message occurs about no mutli-read format, convert single-read files to multi-read files via:
 
-single_to_multi_fast5 -i /mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run3/'RUN 3' -s /mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run3/rawrun3/
+#single_to_multi_fast5 -i /mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run3/'RUN 3' -s /mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run3/rawrun3/
 
 #Dorado Basecaller
 
-# dorado basecaller --device cpu dna_r10.4.1_e8.2_260bps_hac@v4.0.0/ /mnt/data/Study2pipeline/nextflow/dorado_dir/PDO5_files/ > newcalls.bam
+#dorado basecaller --device cpu dna_r10.4.1_e8.2_260bps_hac@v4.0.0/ /mnt/data/Study2pipeline/nextflow/dorado_dir/PDO5_files/ > run4.bam
 
 #Dorado Duplex Run:
+#cd /mnt/Study_2_pipeline/Study2pipeline/nextflow/dorado/dorado_dir
 
-dorado duplex --device cpu dna_r10.4.1_e8.2_260bps_hac@v4.0.0/ /mnt/data/Study2pipeline/nextflow/dorado_dir/PDO5_files/ > duplexcalls.bam
+
+/mnt/Study_2_pipeline/Study2pipeline/nextflow/dorado/dorado_stuff/dorado-0.4.1-linux-x64/bin/dorado basecaller --device cpu dna_r10.4.1_e8.2_260bps_hac@v4.0.0/ /mnt/Study_2_pipeline/Study2pipeline/nextflow/dorado/run4\ pod5/ > run4calls.bam
 
 # Check the files
 
-samtools quickcheck /mnt/data/Study2pipeline/nextflow/dorado_run/newcalls.bam
+samtools quickcheck /mnt/Study_2_pipeline/Study2pipeline/nextflow/dorado/run4calls.bam
 
 # Converting .bam to .fastq
-samtools bam2fq newcalls.bam > basecalls.fastq
+samtools bam2fq run4calls.bam > run4.fastq
 
+# Move .fastq file to new directory
+
+sudo mv run4.fastq /mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/Raw_files
+
+# Change Directory back
+cd /mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/
 
 ###  Quality reports and checks-raw data    ###
 #----------------------------------------------#
 
 # Specify the directory containing your FASTQ files
-input_dir="/mnt/data/Study2pipeline/nextflow/data/raw_files"
+input_dir="/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/Raw_files"
 
 # Specify the output directory for filtered files
-output_dir="/mnt/data/Study2pipeline/nextflow/data/fastqc_reports"
+output_dir="/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/FastQC"
 
 # Run FastQC on all Nanopore FASTQ files in the input directory
 fastqc --nano  -o "$output_dir" --extract "$input_dir"/*.fastq
 
-echo 'FastQC completed. Reports available in nextflow/data/fastqc_reports'
+echo 'FastQC completed. Reports available in nextflow/data/Run4/FastQC'
 
 ###  MultiQC-raw data   ###
 #--------------------------#
 
- /usr/bin/multiqc . /mnt/data/Study2pipeline/nextflow/data/fastqc_reports -o "/mnt/data/Study2pipeline/nextflow/data/multiqc_data"
+ /usr/bin/multiqc . /mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/FastQC -o "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/multiqc"
 
-echo 'MultiQC competed. Report will be available in nextflow/data/multiqc_data'
+echo 'MultiQC competed. Report will be available in nextflow/data/Run4/multiqc'
 
 
 ###   Adapter Trimming & Demultiplexing - Porechop   ###
 #------------------------------------------------------#
-/mnt/data/Study2pipeline/nextflow/Porechop/porechop-runner.py -i "/mnt/data/Study2pipeline/nextflow/data/raw_files/" -t 4 -b "/mnt/data/Study2pipeline/nextflow/data/adapter_trim/"
-echo 'Adapters successfully trimmed. Trimmed reads available at nextflow/data/adapter_trim'
+/mnt/Study_2_pipeline/Study2pipeline/nextflow/Porechop/porechop-runner.py -i "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/Raw_files/" -t 4 -b "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/porechop_trim/"
+echo 'Adapters successfully trimmed. Trimmed reads available at nextflow/data/Run4/porechop_trim'
 
 ###      NANOclust for filtering, chimera identification/deection and clustering    ####
 #--------------------------------------------------------------------------------------#
+#Remove Execution Trace
+
+sudo rm /mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/results/pipeline_info/execution_trace.txt
+
 
 # Limit Memory
 
@@ -62,32 +74,28 @@ NXF_OPTS='-Xms1g -Xmx4g'
 
 #Running NanoCLUST
 
-sudo ../nextflow run main.nf --reads "/mnt/data/Study2pipeline/nextflow/data/adapter_trim/*.fastq" --db "/mnt/data/Study2pipeline/nextflow/NanoCLUST/db/16S_ribosomal_RNA" --tax "mnt/data/Study2pipeline/nextflow/NanoCLUST/db/taxdb/" -profile docker  --min_read_length 1000
+sudo ../nextflow run main.nf --reads "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/porechop_trim/*.fastq" --db "/mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/db/16S_ribosomal_RNA" --tax "mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/db/taxdb/" -profile docker  --min_read_length 500
 
 echo 'NanoCLUST complete. Data will be stored in nextflow/NanoCLUST/results directory'
-
-cd /mnt/data/Study2pipeline/nextflow/NanoCLUST/results/pipeline_info/
-sudo rm execution_trace
-cd /mn/data/Study2pipeline/nextflow/NanoCLUST/
-
-echo 'execution_trace removed'
 
 
 ###  Quality reports for processed data    ###
 #--------------------------------------------#
 
 # Run FastQC on all Nanopore FASTQ files in the input directory
-fastqc --nano  -o "/mnt/data/Study2pipeline/nextflow/data/processed_fastqc_reports" --extract "/mnt/data/Study2pipeline/nextflow/data/adapter_trim"/*.fastq
+fastqc --nano  -o "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/p_fastqc" --extract "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/porechop_trim"/*.fastq
 
-echo 'FastQC completed. Reports available in nextflow/data/processed_fastqc_reports'
+echo 'FastQC completed. Reports available in nextflow/data/p_fastqc'
 
 
 ###  MultiQC processed data   ###
 #-------------------------------#
 
- /usr/bin/multiqc . /mnt/data/Study2pipeline/nextflow/data/processed_fastqc_reports -o "/mnt/data/Study2pipeline/nextflow/data/processed_multiqc_data"
+ /usr/bin/multiqc . /mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/p_fastqc -o "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/pmultiqc"
 
 echo 'MultiQC competed. Report will be available in nextflow/data/processed_multiqc_data'
+
+cd //mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/results
 
 ### Loop To Combine all .csv Files for Data Analysis ####
 #-------------------------------------------------------#
@@ -116,7 +124,7 @@ for subdir in "$results_dir"/*; do
         cat "${csv_files[@]}" > "$output_file.tmp" || { echo "Error: Failed to concatenate CSV files"; exit 1; }
 
         # Extract the top 20 most abundant bacteria and append to the output file
-        tail -n +2 "$output_file.tmp" | sort -t',' -k2 -nr | head -n 20 >> "$output_file" || { echo "Error: Failed to sort and append to output file"; exit 1; }
+        tail -n +2 "$output_file.tmp" | sort -t',' -k2 -nr | head -n 14 >> "$output_file" || { echo "Error: Failed to sort and append to output file"; exit 1; }
 
         # Remove temporary file
         rm "$output_file.tmp" || { echo "Error: Failed to remove temporary file"; exit 1; }
@@ -151,40 +159,4 @@ for file in *.csv; do
     mv "$file.sorted" "$file"
 done
 
-import pandas as pd
-import os
-
-# Get a list of all CSV files in the directory
-directory = '/mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/results/compiled_results'
-csv_files = [file for file in os.listdir(directory) if file.endswith('.csv')]
-
-# Initialize an empty DataFrame to store the result
-result_df = pd.DataFrame(columns=['taxid'])
-
-# Iterate through each file to merge data
-for file in csv_files:
-    df = pd.read_csv(os.path.join(directory, file))
-    if 'taxid' in df.columns and 'rel_abundance' in df.columns:
-        # Filter out rows with missing values in 'taxid' or 'rel_abundance' columns
-        df = df.dropna(subset=['taxid', 'rel_abundance'])
-        # Set 'taxid' as the index
-        df.set_index('taxid', inplace=True)
-        # Rename the 'rel_abundance' column to include the file name
-        df.rename(columns={'rel_abundance': file.replace('_all.csv', '')}, inplace=True)
-        # Merge the dataframes on 'taxid' index
-        result_df = pd.merge(result_df, df, left_index=True, right_index=True, how='outer')
-
-# Drop the duplicate 'taxid' column
-result_df.drop(columns=['taxid'], inplace=True)
-
-# Remove duplicate rows based on 'taxid'
-result_df = result_df[~result_df.index.duplicated(keep='first')]
-
-# Remove the last row
-result_df = result_df.iloc[:-1]
-
-# Save the result to a new CSV file
-result_df.to_csv('result.csv')
-
-print("Files processed successfully:", csv_files)
 
