@@ -1,5 +1,6 @@
 # Bioinformatic-Pipeline
-Custom Bioinformatic Pipeline for Taxonomic Identification from Nanopore Sequencing Reads of the 16S rRNA Gene
+Custom Bioinformatic Pipeline for Taxonomic Identification from Nanopore Sequencing Reads of the 16S rRNA Gene.
+*** Note: To Run this Pipeline, the Pipeline in Shell Format has to be Run First, Followed by the end_compile.py File
 
 
 ## List of Downloads
@@ -12,7 +13,6 @@ Custom Bioinformatic Pipeline for Taxonomic Identification from Nanopore Sequenc
 - NanoCLUST: [NanoCLUST Repository](https://github.com/genomicsITER/NanoCLUST)
 - Dorado [https://github.com/nanoporetech/dorado]
 
-## To Run this Pipeline, the Pipeline in Shell Format has to be Run First, Followed by the end_compile.py File
 
 `bash study2pipeline.sh`
 
