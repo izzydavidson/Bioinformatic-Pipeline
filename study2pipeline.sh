@@ -17,18 +17,18 @@
 #cd /mnt/Study_2_pipeline/Study2pipeline/nextflow/dorado/dorado_dir
 
 
-/mnt/Study_2_pipeline/Study2pipeline/nextflow/dorado/dorado_stuff/dorado-0.4.1-linux-x64/bin/dorado basecaller --device cpu dna_r10.4.1_e8.2_260bps_hac@v4.0.0/ /mnt/Study_2_pipeline/Study2pipeline/nextflow/dorado/run4\ pod5/ > run4calls.bam
+/mnt/Study_2_pipeline/Study2pipeline/nextflow/dorado/dorado_stuff/dorado-0.4.1-linux-x64/bin/dorado duplex --device cpu dna_r10.4.1_e8.2_260bps_hac@v4.0.0/ /mnt/Study_2_pipeline/Study2pipeline/nextflow/dorado/VMB_Run1/POD5_Files > VMBrun1calls.bam
 
 # Check the files
 
-samtools quickcheck /mnt/Study_2_pipeline/Study2pipeline/nextflow/dorado/run4calls.bam
+samtools quickcheck /mnt/Study_2_pipeline/Study2pipeline/nextflow/dorado/VMBrun1calls.bam
 
 # Converting .bam to .fastq
-samtools bam2fq run4calls.bam > run4.fastq
+samtools bam2fq VMBrun1calls.bam > VMBrun1.fastq
 
 # Move .fastq file to new directory
 
-sudo mv run4.fastq /mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/Raw_files
+sudo mv VMBrun1.fastq /mnt/Study_2_pipeline/Study2pipeline/nextflow/data/VMBRun1/Raw_files
 
 # Change Directory back
 cd /mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/
@@ -37,28 +37,28 @@ cd /mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/
 #----------------------------------------------#
 
 # Specify the directory containing your FASTQ files
-input_dir="/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/Raw_files"
+input_dir="/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/VMBRun1/Raw_files"
 
 # Specify the output directory for filtered files
-output_dir="/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/FastQC"
+output_dir="/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/VMBRun1/FastQC"
 
 # Run FastQC on all Nanopore FASTQ files in the input directory
 fastqc --nano  -o "$output_dir" --extract "$input_dir"/*.fastq
 
-echo 'FastQC completed. Reports available in nextflow/data/Run4/FastQC'
+echo 'FastQC completed. Reports available in nextflow/data/VMBRun1/FastQC'
 
 ###  MultiQC-raw data   ###
 #--------------------------#
 
- /usr/bin/multiqc . /mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/FastQC -o "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/multiqc"
+ /usr/bin/multiqc . /mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/FastQC -o "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/VMBRun1/multiqc"
 
-echo 'MultiQC competed. Report will be available in nextflow/data/Run4/multiqc'
+echo 'MultiQC competed. Report will be available in nextflow/data/VMBRun1/multiqc'
 
 
 ###   Adapter Trimming & Demultiplexing - Porechop   ###
 #------------------------------------------------------#
-/mnt/Study_2_pipeline/Study2pipeline/nextflow/Porechop/porechop-runner.py -i "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/Raw_files/" -t 4 -b "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/porechop_trim/"
-echo 'Adapters successfully trimmed. Trimmed reads available at nextflow/data/Run4/porechop_trim'
+/mnt/Study_2_pipeline/Study2pipeline/nextflow/Porechop/porechop-runner.py -i "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/VMBRun1/Raw_files/" -t 4 -b "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/VMBRun1/Trim/"
+echo 'Adapters successfully trimmed. Trimmed reads available at nextflow/data/VMBRun1/Trim'
 
 ###      NANOclust for filtering, chimera identification/deection and clustering    ####
 #--------------------------------------------------------------------------------------#
@@ -74,7 +74,7 @@ NXF_OPTS='-Xms1g -Xmx4g'
 
 #Running NanoCLUST
 
-sudo ../nextflow run main.nf --reads "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/porechop_trim/*.fastq" --db "/mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/db/16S_ribosomal_RNA" --tax "mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/db/taxdb/" -profile docker  --min_read_length 500
+sudo ../nextflow run main.nf --reads "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/VMBRun1/Trim/*.fastq" --db "/mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/db/16S_ribosomal_RNA" --tax "mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/db/taxdb/" -profile docker  --min_read_length 500 --min_cluster_size 25
 
 echo 'NanoCLUST complete. Data will be stored in nextflow/NanoCLUST/results directory'
 
@@ -83,7 +83,7 @@ echo 'NanoCLUST complete. Data will be stored in nextflow/NanoCLUST/results dire
 #--------------------------------------------#
 
 # Run FastQC on all Nanopore FASTQ files in the input directory
-fastqc --nano  -o "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/p_fastqc" --extract "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/porechop_trim"/*.fastq
+fastqc --nano  -o "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/VMBRun1/p_fastqc" --extract "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/VMBRun1/Trim"/*.fastq
 
 echo 'FastQC completed. Reports available in nextflow/data/p_fastqc'
 
@@ -91,7 +91,7 @@ echo 'FastQC completed. Reports available in nextflow/data/p_fastqc'
 ###  MultiQC processed data   ###
 #-------------------------------#
 
- /usr/bin/multiqc . /mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/p_fastqc -o "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/Run4/pmultiqc"
+ /usr/bin/multiqc . /mnt/Study_2_pipeline/Study2pipeline/nextflow/data/VMBRun1/p_fastqc -o "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/VMBRun1/p_multiqc"
 
 echo 'MultiQC competed. Report will be available in nextflow/data/processed_multiqc_data'
 
