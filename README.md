@@ -1,5 +1,10 @@
 # Bioinformatic-Pipeline
-Custom Bioinformatic Pipeline for Taxonomic Identification from Nanopore Sequencing Reads of the 16S rRNA Gene
+Custom Bioinformatic Pipeline for Taxonomic Identification from Nanopore Sequencing Reads of the 16S rRNA Gene.
+
+Added an automated pipeline which only requires:
+- Name of the Run
+- Addition of POD5 files and path to find them
+The Pipeline does the rest!
 
 
 ## List of Downloads
