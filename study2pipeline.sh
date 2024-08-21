@@ -74,7 +74,7 @@ NXF_OPTS='-Xms1g -Xmx4g'
 
 #Running NanoCLUST
 
-sudo ../nextflow run main.nf --reads "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/VMBRun1/Trim/*.fastq" --db "/mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/db/16S_ribosomal_RNA" --tax "mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/db/taxdb/" -profile docker  --min_read_length 500 --min_cluster_size 25
+sudo ../nextflow run main.nf --reads "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/VMBRun1/Trim/*.fastq" --db "/mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/db/16S_ribosomal_RNA" --tax "mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/db/taxdb/" -profile docker  --min_read_length 500 --min_cluster_size 25 --polishing_reads 25
 
 echo 'NanoCLUST complete. Data will be stored in nextflow/NanoCLUST/results directory'
 
