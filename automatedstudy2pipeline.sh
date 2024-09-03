@@ -2,7 +2,7 @@
 
 # Set the run name 
 
-run_name="AutoTest1"
+run_name="VMBRun2_341"
 
 
 # Set the base directory for the run
@@ -17,7 +17,7 @@ mkdir -p "$base_dir/multiqc"
 mkdir -p "$base_dir/Trim"
 mkdir -p "$base_dir/p_fastqc"
 mkdir -p "$base_dir/p_multiqc"
-mkdir -p "$base_dir/nanoclust_results"  # Single directory for NanoCCLUST
+mkdir -p "$base_dir/nanoclust_results" 
 
 sudo cp -r /mnt/Study_2_pipeline/Study2pipeline/nextflow/data/POD5_files/* "$base_dir/POD5_files/"
 
@@ -46,7 +46,7 @@ multiqc "$base_dir/fastqc" -o "$base_dir/multiqc"
 /mnt/Study_2_pipeline/Study2pipeline/nextflow/Porechop/porechop-runner.py -i "$base_dir/raw/${run_name}.fastq" -t 4 -b "$base_dir/Trim"
 
 # FastQC Analysis on Processed Data
-fastqc --nano -o "$base_dir/p_fastqc" --extract "$base_dir/Trim/${run_name}.fastq"
+fastqc --nano -o "$base_dir/p_fastqc" --extract "$base_dir/Trim/*.fastq"
 
 # MultiQC Analysis on Processed Data
 multiqc "$base_dir/p_fastqc" -o "$base_dir/p_multiqc"
@@ -54,9 +54,16 @@ multiqc "$base_dir/p_fastqc" -o "$base_dir/p_multiqc"
 cd /mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/
 
 # Running NanoCLUST
+
+
 nano_clust_results_dir="$base_dir/nanoclust_results"
 
-sudo ../nextflow run main.nf --reads "$base_dir/Trim/*.fastq" --db "/mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/db/16S_ribosomal_RNA" --tax "/mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/db/taxdb/" -profile docker --min_read_length 500 --min_cluster_size 25
+#Remove Execution Trace
+
+sudo rm /mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/results/pipeline_info/execution_trace.txt
+
+
+sudo ../nextflow run main.nf --reads "$base_dir/Trim/*.fastq" --db "/mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/db/16S_ribosomal_RNA" --tax "/mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/db/taxdb/" -profile docker --min_read_length 500 --min_cluster_size 25 --polishing_reads 25 --outdir "$base_dir/nanoclust_results"
 
 echo 'NanoCLUST complete. Data will be stored in $nano_clust_results_dir'
 
