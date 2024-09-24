@@ -38,7 +38,9 @@ cd /mnt/Study_2_pipeline/Study2pipeline/nextflow/dorado/dorado_dir
 samtools bam2fq "$base_dir/bam/${run_name}_duplex.bam" > "$base_dir/raw/${run_name}.fastq"
 
 # FastQC Analysis
-sudo fastqc --nano -o "$base_dir/fastqc" --extract "$base_dir/raw/${run_name}.fastq"
+for file in $base_dir/raw/*.fastq; do
+    sudo fastqc --nano -o "$base_dir/fastqc" --extract "$file"
+done
 
 # MultiQC Analysis on Raw Data
 multiqc "$base_dir/fastqc" -o "$base_dir/multiqc"
@@ -50,7 +52,9 @@ cat "$base_dir/raw/${run_name}.fastq" | NanoFilt -l 500 > "$base_dir/filtered_fa
 /mnt/Study_2_pipeline/Study2pipeline/nextflow/Porechop/porechop-runner.py -i "$base_dir/filtered_fastq" -t 4 -b "$base_dir/Trim"
 
 # FastQC Analysis on Processed Data
-fastqc --nano -o "$base_dir/p_fastqc" --extract "$base_dir/Trim/*.fastq"
+for file in $base_dir/Trim/*.fastq; do
+    sudo fastqc --nano -o "$base_dir/p_fastqc" --extract "$file"
+done
 
 # MultiQC Analysis on Processed Data
 multiqc "$base_dir/p_fastqc" -o "$base_dir/p_multiqc"
