@@ -44,7 +44,7 @@ sudo fastqc --nano -o "$base_dir/fastqc" --extract "$base_dir/raw/${run_name}.fa
 multiqc "$base_dir/fastqc" -o "$base_dir/multiqc"
 
 # Trimming and filtering reads shorter than 500 bp
-cat "$base_dir/raw/${run_name}.fastq" | NanoFilt -l 500 > "$base_dir/filtered.fastq"
+cat "$base_dir/raw/${run_name}.fastq" | NanoFilt -l 500 > "$base_dir/filtered_fastq"
 
 # Run Porechop on the filtered reads
 /mnt/Study_2_pipeline/Study2pipeline/nextflow/Porechop/porechop-runner.py -i "$base_dir/filtered_fastq" -t 4 -b "$base_dir/Trim"
