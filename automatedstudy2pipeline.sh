@@ -2,7 +2,7 @@
 
 # Set the run name 
 
-run_name="VMBRun3_Mix"
+run_name="VMB_mix_combined"
 
 
 # Set the base directory for the run
