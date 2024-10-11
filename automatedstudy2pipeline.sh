@@ -2,7 +2,7 @@
 
 # Set the run name 
 
-run_name="VMB_mix_combined"
+run_name="VMB_mix_compile"
 
 
 # Set the base directory for the run
@@ -20,11 +20,19 @@ mkdir -p "$base_dir/p_multiqc"
 mkdir -p "$base_dir/nanoclust_results" 
 mkdir -p "$base_dir/filtered_fastq"
 
+
+#POD5 Conversion (adjust command as needed for your setup)
+#/home/ubuntu/.local/bin/pod5 convert fast5 "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/fast5" -o "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/POD5_files"
+
+# Add pod5 to PATH
+export PATH=$PATH:/home/ubuntu/.local/bin
+
+# Now run the command
+pod5 convert fast5 "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/fast5" -o "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/POD5_files/${run_name}.pod5"
+
+
 sudo cp -r /mnt/Study_2_pipeline/Study2pipeline/nextflow/data/POD5_files/* "$base_dir/POD5_files/"
 
-
-# POD5 Conversion (adjust command as needed for your setup)
-# pod5 convert fast5 "<input_directory>" -o "$base_dir/POD5_files"
 
 # Basecalling with Dorado
 #dorado basecaller --device cpu dna_r10.4.1_e8.2_260bps_hac@v4.0.0/ "$base_dir/POD5_files" > "$base_dir/bam/${run_name}.bam"
@@ -43,13 +51,19 @@ for file in $base_dir/raw/*.fastq; do
 done
 
 # MultiQC Analysis on Raw Data
-multiqc "$base_dir/fastqc" -o "$base_dir/multiqc"
+multiqc . "$base_dir/fastqc" -o "$base_dir/multiqc"
 
-# Trimming and filtering reads shorter than 500 bp
-cat "$base_dir/raw/${run_name}.fastq" | NanoFilt -l 500 > "$base_dir/filtered_fastq"
+# Trimming and filtering reads shorter than 500 bp and quality less than 12
+sudo bash -c 'for file in "$base_dir"/raw/*.fastq; do
+    NanoFilt -l 500 -q 10 "$file" > "$base_dir/filtered_fastq/$(basename "$file" .fastq)_filtered.fastq"
+done'
+
 
 # Run Porechop on the filtered reads
-/mnt/Study_2_pipeline/Study2pipeline/nextflow/Porechop/porechop-runner.py -i "$base_dir/filtered_fastq" -t 4 -b "$base_dir/Trim"
+for file in "$base_dir/filtered_fastq/"*.fastq; do
+    /mnt/Study_2_pipeline/Study2pipeline/nextflow/Porechop/porechop-runner.py -i "$file" -t 4 -b "$base_dir/Trim" --end_size 50 --barcode_threshold 70 --barcode_diff 3
+done
+
 
 # FastQC Analysis on Processed Data
 for file in $base_dir/Trim/*.fastq; do
@@ -57,7 +71,7 @@ for file in $base_dir/Trim/*.fastq; do
 done
 
 # MultiQC Analysis on Processed Data
-multiqc "$base_dir/p_fastqc" -o "$base_dir/p_multiqc"
+multiqc . "$base_dir/p_fastqc" -o "$base_dir/p_multiqc"
 
 cd /mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/
 
@@ -68,7 +82,7 @@ nano_clust_results_dir="$base_dir/nanoclust_results"
 
 #Remove Execution Trace
 
-sudo rm /mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/results/pipeline_info/execution_trace.txt
+sudo rm "$base_dir/nanoclust_results/pipeline_info/execution_trace.txt"
 
 
 sudo ../nextflow run main.nf --reads "$base_dir/Trim/*.fastq" --db "/mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/db/16S_ribosomal_RNA" --tax "/mnt/Study_2_pipeline/Study2pipeline/nextflow/NanoCLUST/db/taxdb/" -profile docker --min_read_length 500 --min_cluster_size 25 --polishing_reads 25 --outdir "$base_dir/nanoclust_results"
@@ -79,11 +93,11 @@ echo "NanoCLUST complete. Data will be stored in $nano_clust_results_dir"
 cd "$nano_clust_results_dir"
 
 # Create the output directory for combined results
-output_dir="$nano_clust_results_dir/compiled_results"
-mkdir -p "$output_dir" || { echo "Error: Unable to create output directory"; exit 1; }
+output_dir="$base_dir/nanoclust_results/compiled_results"
+sudo mkdir -p "$output_dir" || { echo "Error: Unable to create output directory"; exit 1; }
 
 # Iterate over subdirectories
-for subdir in "$nano_clust_results_dir"/*; do
+for subdir in "$nanoclust_results"/*; do
     # Check if the item is a directory
     if [ -d "$subdir" ]; then
         echo "Processing directory: $subdir"  # Debugging output
