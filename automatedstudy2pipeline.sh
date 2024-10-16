@@ -2,7 +2,7 @@
 
 # Set the run name 
 
-run_name="VMB_mix_compile"
+run_name="341test"
 
 
 # Set the base directory for the run
@@ -20,6 +20,15 @@ mkdir -p "$base_dir/p_multiqc"
 mkdir -p "$base_dir/nanoclust_results" 
 mkdir -p "$base_dir/filtered_fastq"
 
+# Function to check if a directory exists, if not, create it
+create_dir_if_not_exists() {
+    if [ -d "$1" ]; then
+        echo "Directory $1 already exists, skipping creation."
+    else
+        echo "Creating directory $1"
+        mkdir -p "$1" || { echo "Error: Unable to create directory $1"; exit 1; }
+    fi
+}
 
 #POD5 Conversion (adjust command as needed for your setup)
 #/home/ubuntu/.local/bin/pod5 convert fast5 "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/fast5" -o "/mnt/Study_2_pipeline/Study2pipeline/nextflow/data/POD5_files"
@@ -46,29 +55,21 @@ cd /mnt/Study_2_pipeline/Study2pipeline/nextflow/dorado/dorado_dir
 samtools bam2fq "$base_dir/bam/${run_name}_duplex.bam" > "$base_dir/raw/${run_name}.fastq"
 
 # FastQC Analysis
-for file in $base_dir/raw/*.fastq; do
-    sudo fastqc --nano -o "$base_dir/fastqc" --extract "$file"
-done
+    sudo fastqc --nano -o "$base_dir/fastqc" --extract "$base_dir/raw/*.fastq"
 
 # MultiQC Analysis on Raw Data
 multiqc . "$base_dir/fastqc" -o "$base_dir/multiqc"
 
 # Trimming and filtering reads shorter than 500 bp and quality less than 12
-sudo bash -c 'for file in "$base_dir"/raw/*.fastq; do
-    NanoFilt -l 500 -q 10 "$file" > "$base_dir/filtered_fastq/$(basename "$file" .fastq)_filtered.fastq"
-done'
+    NanoFilt -l 500 -q 10 "$base_dir/raw/${run_name}.fastq" > "$base_dir/filtered_fastq/$(basename "$file" .fastq)_filtered.fastq"
 
 
-# Run Porechop on the filtered reads
-for file in "$base_dir/filtered_fastq/"*.fastq; do
-    /mnt/Study_2_pipeline/Study2pipeline/nextflow/Porechop/porechop-runner.py -i "$file" -t 4 -b "$base_dir/Trim" --end_size 50 --barcode_threshold 70 --barcode_diff 3
-done
+# Run Porechop on the filtered reads   
+ /mnt/Study_2_pipeline/Study2pipeline/nextflow/Porechop/porechop-runner.py -i "$base_dir/filtered_fastq/"*.fastq -t 4 -b "$base_dir/Trim" --end_size 50 --barcode_threshold 65 --barcode_diff 3
 
 
 # FastQC Analysis on Processed Data
-for file in $base_dir/Trim/*.fastq; do
-    sudo fastqc --nano -o "$base_dir/p_fastqc" --extract "$file"
-done
+    sudo fastqc --nano -o "$base_dir/p_fastqc" --extract "$base_dir/Trim/*.fastq"
 
 # MultiQC Analysis on Processed Data
 multiqc . "$base_dir/p_fastqc" -o "$base_dir/p_multiqc"
